@@ -21,6 +21,7 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 public class PianoProcessor extends JPanel implements Receiver{
@@ -34,29 +35,34 @@ public class PianoProcessor extends JPanel implements Receiver{
             51, 52, 54, 56, 57, 59, 61, 63, 64, 66, 68, 69, 71, 73, 75, 76,
             78, 80, 81, 83, 85, 87, 88));
 
+    //another idea, make a dictionary for all key note names
+    //but the issue here is what scale are we in?
+    //make some sort of menu that you can choose the scale and a color scheme
+
 //    Map<Integer, String> notesDict= new HashMap<>()
 //    {{
 //        put(1, "A");
 //        ...
-//        //another idea, make a dictionary for all key note names
-//        //but the issue here is what scale are we in?
 //    }};
 
     private String name;
-    private List<Integer[]> notes;
+    private Map<Integer, Integer[]> activeNotes1; //[x, y, width, height, activeBit]
+    private List<Integer[]> prevNotes;
 
     public PianoProcessor(String name) {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setPreferredSize(new Dimension(screenSize.width,(int)(screenSize.height - 0.25* screenSize.height)));
+        setBackground(Color.GRAY);
         this.name = name;
-        notes = new ArrayList<>();
+        activeNotes1 = new HashMap<Integer, Integer[]>();
+        prevNotes = new ArrayList<Integer[]>();
         startAnimation();
     }
 
     private void startAnimation() {
         new Thread(() -> {
             while (true) {
-                moveCircles();
+                moveNotes();
                 repaint();
                 try {
                     Thread.sleep(10); // Adjust the delay as needed
@@ -67,33 +73,77 @@ public class PianoProcessor extends JPanel implements Receiver{
         }).start();
     }
 
-    private void moveCircles() {
+    private void moveNotes() {
+
+        for (Map.Entry<Integer, Integer[]> data : activeNotes1.entrySet()) {
+            Integer key = data.getKey();
+            Integer[] coord = data.getValue();
+            int y = coord[0];
+            y--;
+            int rectHeight = coord[1];
+            rectHeight++;
+            activeNotes1.replace(key, new Integer[]{y, rectHeight});
+        }
 
         int i = 0;
-        while (i < notes.size()) {
-            int y = notes.get(i)[1];
-            y -= 1; // Adjust the vertical movement speed as needed
-            if (y <= 0) {
-                notes.remove(i);
+        while (i < prevNotes.size()) {
+            Integer[] data = prevNotes.get(i);
+            int y = data[1];
+            int rectHeight = data[2];
+            y--;
+            if (y + rectHeight <= 0) { //y-coord becomes negative when above top border
+                prevNotes.remove(i);
             } else {
-                notes.get(i)[1] = y;
+                prevNotes.get(i)[1] = y;
             }
             i++;
         }
+
+//        for (Map.Entry<Integer, Integer[]> data : prevNotes.entrySet()) {
+//            Integer key = data.getKey();
+//            Integer[] coord = data.getValue();
+//            int y = coord[0];
+//            int height = coord[1];
+//            y--;
+//            if (y + height <= 0){
+//                prevNotes.remove(key);
+//            } else {
+//                prevNotes.get(key)[0] = y;
+//            }
+//        }
+
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.setColor(Color.BLUE);
-        int size;
-        for (Integer[] coord : notes) {
-            if (whiteNotesIds.contains(coord[0])) {
-                size = 20;
+        int rectWidth;
+
+        for (Map.Entry<Integer, Integer[]> data : activeNotes1.entrySet()) {
+            //is it a white or black key?
+            int noteID = data.getKey();
+            Integer[] coord = data.getValue();
+            int y = coord[0];
+            int rectHeight = coord[1];
+            if (whiteNotesIds.contains(noteID)) {
+                rectWidth = 20;
             } else {
-                size = 15;
+                rectWidth = 15;
             }
-            g.fillOval(coord[0] * 19, coord[1], size, size);
+            g.fillRoundRect(noteID * 19, y, rectWidth, rectHeight, 10, 10);
+        }
+
+        for (Integer[] data: prevNotes) {
+            int noteID = data[0];
+            int y = data[1];
+            int rectHeight = data[2];
+            if (whiteNotesIds.contains(noteID)) {
+                rectWidth = 20;
+            } else {
+                rectWidth = 15;
+            }
+            g.fillRoundRect(noteID * 19, y, rectWidth, rectHeight, 10, 10);
         }
     }
 
@@ -105,21 +155,25 @@ public class PianoProcessor extends JPanel implements Receiver{
             for (byte b : data) {
                 translated += (String.format("%02X", b));
             }
-//            System.out.println(translated);
             if (!translated.equals("FE")) {
                 int type = Integer.parseInt(translated.substring(0, 2), 16);
                 int noteID = Integer.parseInt(translated.substring(2, 4), 16) - 20;
                 int vel = Integer.parseInt(translated.substring(4), 16);
                 if (vel>0) {
-                    notes.add(new Integer[]{noteID,getHeight()});
-//	    			notesOn.add(new Integer[]{noteID, 0});
+                    activeNotes1.put(noteID, new Integer[]{getHeight(), 0});
                 } else {
-//        			notesOff.add(new Integer[] {noteID, 0});
+                    if (activeNotes1.containsKey(noteID)) { // if previously played
+                            Integer[] noteInfo = activeNotes1.get(noteID);
+                            int y = noteInfo[0];
+                            int rectHeight = noteInfo[1];
+                            Integer[] newNote = new Integer[]{noteID, y, rectHeight};
+                            activeNotes1.remove(noteID); //remove from old list
+                            prevNotes.add(newNote); //place into new list
+                    }
                 }
             }
-//            System.out.println(notes);
-//            System.out.println(notesOn);
-//            System.out.println(notesOff);
+            System.out.println(activeNotes1);
+            System.out.println(prevNotes.toString());
         } catch (Exception e) {
 //            e.printStackTrace();
         }

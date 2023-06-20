@@ -20,7 +20,6 @@ public class MainMidi {
     public static void main(String[] args) {
         MidiHandler midiDevices = new MidiHandler();
         List<PianoProcessor> receivers = midiDevices.getReceivers();
-        System.out.println(receivers.toString());
 
         PianoProcessor kbd = receivers.get(1);
         SwingUtilities.invokeLater(() -> {
