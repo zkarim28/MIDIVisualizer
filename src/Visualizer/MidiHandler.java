@@ -37,7 +37,7 @@ public class MidiHandler
                 System.out.println(device.getDeviceInfo() + " Was Opened");
 
             } catch (MidiUnavailableException e) {
-//                e.printStackTrace();
+                e.printStackTrace();
             }
         }
     }

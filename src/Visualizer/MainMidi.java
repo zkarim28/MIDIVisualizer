@@ -30,39 +30,5 @@ public class MainMidi {
             frame.pack();
             frame.setVisible(true);
         });
-
-
-
-//    	BlockingQueue<MidiMessage> messageQueue = new LinkedBlockingQueue<>();
-
-
-
-
-//    	PianoProcessor kbd = new PianoProcessor();
-
-
-
-//    	Start a separate thread to continuously retrieve and process MIDI messages
-//    	Thread messageProcessingThread = new Thread(() -> {
-//    	  while (true) {
-//    	      try {
-//    	          MidiMessage midiMessage = messageQueue.take(); // Blocks until a message is available
-//    	          // Process the MIDI message
-//    	          byte[] data = midiMessage.getMessage();
-//    	          String translated = new String();
-//    	          for (byte b : data) {
-//    	              translated += (String.format("%02X", b));
-//    	          }
-//    	          System.out.println("Received MIDI message: " + translated);
-//    	      } catch (InterruptedException e) {
-//    	          e.printStackTrace();
-//    	      }
-//    	  }
-//    	});
-//    	messageProcessingThread.start();
-//    	// Assign the messageQueue to each MidiInputReceiver
-//    	for (MidiInputReceiver receiver : receivers) {
-//    	  receiver.setMessageQueue(messageQueue);
-//    }
     }
 }
