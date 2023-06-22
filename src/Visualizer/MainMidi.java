@@ -21,7 +21,8 @@ public class MainMidi {
         MidiHandler midiDevices = new MidiHandler();
         List<PianoProcessor> receivers = midiDevices.getReceivers();
 
-        PianoProcessor kbd = receivers.get(1);
+        receivers.remove(0);
+        PianoProcessor kbd = receivers.get(0);
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Piano Visualizer");
             PianoProcessor visualizer = kbd;

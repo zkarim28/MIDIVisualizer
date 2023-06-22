@@ -14,7 +14,7 @@ public class MidiHandler
             try {
                 MidiDevice device = MidiSystem.getMidiDevice(infos[i]);
 
-                System.out.println(infos[i]);
+//                System.out.println(infos[i]);
 
                 //get all transmitters
                 List<Transmitter> transmitters = device.getTransmitters();
@@ -34,10 +34,10 @@ public class MidiHandler
 
 
                 device.open();
-                System.out.println(device.getDeviceInfo() + " Was Opened");
+//                System.out.println(device.getDeviceInfo() + " Was Opened");
 
             } catch (MidiUnavailableException e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
     }
