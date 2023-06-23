@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MIDIVisualizer:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MIDIVisualizer_jar</output-path>
+    <root id="archive" name="MIDIVisualizer.jar">
+      <element id="module-output" name="MIDIVisualizer" />
+    </root>
+  </artifact>
+</component>

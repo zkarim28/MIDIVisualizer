@@ -45,12 +45,14 @@ import javax.swing.border.EmptyBorder;
 
 public class PianoProcessor extends JPanel implements Receiver{
 
-    private static final int RECT_WIDTH_WHITE = 20;
-    private static final int RECT_WIDTH_BLACK = 15;
+    private static final int RECT_WIDTH_WHITE = 9;
+    private static final int RECT_WIDTH_BLACK = 6;
     private static final int NOTE_SPEED = 5;
-    private static final int ANIMATION_DELAY = 15;
+    private static final int ANIMATION_DELAY = 12;
+    private static final int PIXEL_MULT = 9;
     private static final Color NOTE_BORDER_COLOR = Color.WHITE;
     private static final Color NOTE_COLOR = new Color(0, 128, 128);
+
 
     private static final Set<Integer> WHITE_NOTE_IDS = new HashSet<>(Arrays.asList(1, 3, 4, 6, 8, 9, 11, 13, 15, 16, 18, 20, 21,
             23, 25, 27, 28, 30, 32, 33, 35, 37, 39, 40, 42, 44, 45, 47, 49,
@@ -66,9 +68,10 @@ public class PianoProcessor extends JPanel implements Receiver{
 
     public PianoProcessor(String name) {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setPreferredSize(new Dimension(screenSize.width,(int)(screenSize.height - 0.25* screenSize.height)));
+        setPreferredSize(new Dimension(screenSize.width/2,(int)(screenSize.height - 0.25* screenSize.height)/2));
         setDoubleBuffered(true);
 
+        setBackground(Color.BLACK);
         this.name = name;
         try {
             backgroundImg = ImageIO.read(new File("/Users/zarifkarim/MIDIVisualizer/src/Visualizer/hamilton.jpeg"));
@@ -76,7 +79,7 @@ public class PianoProcessor extends JPanel implements Receiver{
 
         setLayout(new FlowLayout(FlowLayout.LEFT));
         sustainLabel = new JLabel("Sustain: " + sustainStatus);
-        sustainLabel.setFont(sustainLabel.getFont().deriveFont(30.0f));
+        sustainLabel.setFont(sustainLabel.getFont().deriveFont(15.0f));
         sustainLabel.setForeground(Color.WHITE);
 
         add(sustainLabel);
@@ -114,7 +117,7 @@ public class PianoProcessor extends JPanel implements Receiver{
         while (i < prevNotes.size()) {
             int y = prevNotes.get(i)[1];
             int rectHeight = prevNotes.get(i)[3];
-            prevNotes.get(i)[5] -= 2;
+            prevNotes.get(i)[5] -= 3;
 
             y-= NOTE_SPEED; // adjust
             if (y + rectHeight <= 0) { //y-coord becomes negative when above top border
@@ -136,42 +139,49 @@ public class PianoProcessor extends JPanel implements Receiver{
             int noteID = note.getKey();
             int y = note.getValue()[0];
             int rectWidth = note.getValue()[1];
+            int offset = rectWidth==6? 1 : 0;
             int rectHeight = note.getValue()[2];
             int vel = note.getValue()[3];
 
             g.setColor(new Color(235, 235, 235));
-            g.fillRoundRect(noteID * 19 - 1, y - 1, rectWidth + 2, rectHeight + 2, 10, 10);
+            g.fillRoundRect(noteID * PIXEL_MULT - 1 + offset + 20, y - 1 + offset, rectWidth + 2, rectHeight + 2, 10, 10);
             g.setColor(new Color(0, vel*2, vel*2));
-            g.fillRoundRect(noteID * 19, y, rectWidth, rectHeight, 10, 10);
+            g.fillRoundRect(noteID * PIXEL_MULT + offset + 20, y + offset, rectWidth, rectHeight, 10, 10);
         }
 
         for (Integer[] data : prevNotes) {
             int noteID = data[0];
             int y = data[1];
             int rectWidth = data[2];
+            int offset = rectWidth==6? 1 : 0;
             int rectHeight = data[3];
             int vel = data[4];
-            int alpha = data[5] >= 0? data[5] : 0;
+            int alpha = data[5] >= 0 ? data[5] : 0;
 
             g.setColor(new Color(235, 235, 235, alpha));
-            g.fillRoundRect(noteID * 19 - 1, y - 1, rectWidth + 2, rectHeight + 2, 10, 10);
+            g.fillRoundRect(noteID * PIXEL_MULT - 1 + offset + 20, y - 1 + offset, rectWidth + 2, rectHeight + 2, 10, 10);
             g.setColor(new Color(0, vel*2, vel*2, alpha));
-            g.fillRoundRect(noteID * 19, y, rectWidth, rectHeight, 10, 10);
+            g.fillRoundRect(noteID * PIXEL_MULT + offset + 20, y + offset, rectWidth, rectHeight, 10, 10);
         }
     }
 
     @Override
     public void send(MidiMessage message, long timeStamp) {
+        int type;
+        int noteID;
+        int vel;
+        String translated;
         try {
-            String translated = new String();
-            for (byte b : message.getMessage()) {
-                translated += (String.format("%02X", b));
-            }
+            try {
+                translated = new String();
+                for (byte b : message.getMessage()) {
+                    translated += (String.format("%02X", b));
+                }
+                type = Integer.parseInt(translated.substring(0, 2), 16);
+                noteID = Integer.parseInt(translated.substring(2, 4), 16) - 20;
+                vel = Integer.parseInt(translated.substring(4), 16);
+            } catch (Exception e) {return;}
             if (!translated.equals("FE")) {
-                int type = Integer.parseInt(translated.substring(0, 2), 16);
-                int noteID = Integer.parseInt(translated.substring(2, 4), 16) - 20;
-                int vel = Integer.parseInt(translated.substring(4), 16);
-
 //                System.out.println(type + " " + noteID + " " + vel);
                 if (vel>0) {
                     if (type == 144) { //if type note
