@@ -10,6 +10,8 @@ Challenges: Concurrency issues, solved by replacing notes list type with thread 
 How to Install: Download the code (will update on soon)
 How to Use: Plug in your MIDI Keyboard, run program, play!
 
+Demo Video: https://youtu.be/tYoPVWI0KZE
+
 Credits: 
 - https://stackoverflow.com/questions/6937760/java-getting-input-from-midi-keyboard
 
